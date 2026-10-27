@@ -20,6 +20,8 @@ Working on: nothing
 - [ ] Calibrate risk scores (Naive Bayes/KNN give near-0% or near-100%): wrap the saved model in CalibratedClassifierCV in train.py
 
 ## Recently landed
+- **2026-10-27** — Removed Claude from the GitHub contributors: rewrote the 3 commits without the Co-Authored-By line and force-pushed (new IDs e4b5c2e, 69a2805, 5fe0835).
+  Learn: a commit's ID is a fingerprint of its contents, message included, so editing an old message makes new commits and needs a force push.
 - **2026-10-27** — Published to GitHub (public): https://github.com/AnishBonda20/cardiosense-heart-disease-prediction. signup.db, .claude/ and old backups are git-ignored. Also fixed two review findings: username re-checked under a lock at account creation; session cookie SameSite=Lax (blocks cross-site form posts).
   Learn: .gitignore keeps a file out of the repo only if it's listed before the first commit; once a private file is pushed, it stays in the history.
 - **2026-10-27** — Saved the deck locally: ../presentation/CardioSense_Presentation.pptx (18 slides, speaker notes) and .pdf, plus slides/slide-01…18.png. Slides are full-resolution images; for editable text, export from the claude.ai deck (Share › Export).
