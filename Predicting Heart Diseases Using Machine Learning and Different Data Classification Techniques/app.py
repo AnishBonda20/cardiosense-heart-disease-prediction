@@ -28,6 +28,10 @@ OTP_MAX_TRIES = 5
 app = Flask(__name__)
 # Without SECRET_KEY set, a random key is used: logins reset every restart.
 app.secret_key = os.environ.get('SECRET_KEY') or secrets.token_hex(32)
+# SameSite=Lax: browsers don't send the session cookie on forms posted from other sites, which blocks
+# cross-site request forgery on every POST route. Behind HTTPS, also set SESSION_COOKIE_SECURE=1.
+app.config.update(SESSION_COOKIE_SAMESITE='Lax', SESSION_COOKIE_HTTPONLY=True,
+                  SESSION_COOKIE_SECURE=os.environ.get('SESSION_COOKIE_SECURE') == '1')
 
 # Every input the models use: label, unit, and either (min, max, step) for a number or a list of
 # (code, name, short explanation) choices. The form is drawn from this and the server checks
@@ -247,6 +251,12 @@ def setup_db():
     con = db()
     con.execute("create table if not exists info(user varchar(250), email varchar(250), password varchar(250), mobile int, name varchar(250))")
     con.execute("create table if not exists predictions(user text, model text, inputs text, positive int, risk real, created text)")
+    # Let the database itself refuse a second account with the same username. An older database that
+    # already holds duplicates can't take the index; account creation re-checks under a lock either way.
+    try:
+        con.execute("create unique index if not exists info_user_unique on info(user)")
+    except sqlite3.IntegrityError:
+        pass
     rows = con.execute("select rowid, password from info").fetchall()
     for rowid, pw in rows:
         if not str(pw).startswith(('scrypt:', 'pbkdf2:')):
@@ -358,11 +368,22 @@ def predict_lo():
         return render_template('val.html')
 
     PENDING.pop(session.pop('pending'))
+    # Re-check the username now, under a write lock: someone else may have finished signing up with the
+    # same name since this person started. BEGIN IMMEDIATE makes the check and the insert one step.
     con = db()
-    con.execute("insert into `info` (`user`,`email`, `password`,`mobile`,`name`) VALUES (?, ?, ?, ?, ?)",
-                (p['user'], p['email'], p['password'], p['mobile'], p['name']))
-    con.commit()
-    con.close()
+    try:
+        con.execute('BEGIN IMMEDIATE')
+        if con.execute("select 1 from info where `user` = ?", (p['user'],)).fetchone():
+            raise sqlite3.IntegrityError('username taken')
+        con.execute("insert into `info` (`user`,`email`, `password`,`mobile`,`name`) VALUES (?, ?, ?, ?, ?)",
+                    (p['user'], p['email'], p['password'], p['mobile'], p['name']))
+        con.commit()
+    except sqlite3.IntegrityError:
+        con.rollback()
+        flash('That username was just taken. Register again with another one.')
+        return redirect(url_for('logon'))
+    finally:
+        con.close()
     flash('Account created. Log in.', 'ok')
     return redirect(url_for('login'))
 
