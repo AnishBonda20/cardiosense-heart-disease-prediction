@@ -8,7 +8,7 @@ Working on: nothing
 - [ ] Fill the [bracketed] placeholders in ../reports/*.docx (names, register numbers, guide, college, dates, project-plan weeks) and check each reference — Anish
 - [x] Drop the unused tables in signup.db (accounts, details, detail, data, datas) (#2)
 - [ ] Rate-limit OTP emails per address/IP (#7)
-- [ ] Add CSRF protection (Flask-WTF CSRFProtect) now that sessions exist (#10)
+- [x] Basic CSRF protection: session cookie SameSite=Lax. (Full per-form tokens with Flask-WTF still optional.)
 - [ ] Add a database-level UNIQUE on info.user (the app checks it, the table doesn't) (#9)
 - [ ] Delete unused theme assets: static/css (all but app.css), static/js (all but app.js), static/fonts, static/webfonts, static/sass, static/anova|chi2|mi (old notebook PNGs), static/images (all but form-img.png, UDMI_Cardiovascular-Disease.png, fav-icon.png), whitewolf-design.css, templates_old/, models_old/, ../.playwright-mcp/
 - [x] Retrain the models on a current scikit-learn so the app runs on Python 3.11+ (train.py, Python 3.13)
@@ -20,6 +20,8 @@ Working on: nothing
 - [ ] Calibrate risk scores (Naive Bayes/KNN give near-0% or near-100%): wrap the saved model in CalibratedClassifierCV in train.py
 
 ## Recently landed
+- **2026-10-27** — Published to GitHub (public): https://github.com/AnishBonda20/cardiosense-heart-disease-prediction. signup.db, .claude/ and old backups are git-ignored. Also fixed two review findings: username re-checked under a lock at account creation; session cookie SameSite=Lax (blocks cross-site form posts).
+  Learn: .gitignore keeps a file out of the repo only if it's listed before the first commit; once a private file is pushed, it stays in the history.
 - **2026-10-27** — Saved the deck locally: ../presentation/CardioSense_Presentation.pptx (18 slides, speaker notes) and .pdf, plus slides/slide-01…18.png. Slides are full-resolution images; for editable text, export from the claude.ai deck (Share › Export).
   Learn: a picture-per-slide PowerPoint looks identical everywhere but can't be edited; the editable copy comes from the deck's own export.
 - **2026-10-27** — Two Word reports in ../reports/ (with PDFs): CardioSense_Project_Report (35 pages, college template: abstract, 9 chapters, appendix, 6 UML/DFD diagrams, 10 screenshots, all numbers from metrics.json) and CardioSense_Project_Guide (15 pages: what it does, pitch + demo script + viva Q&A, run steps, troubleshooting).
