@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% block title %}Dataset{% endblock %}
+{% block content %}
+{% set pos_pct = (stats.pos / stats.n * 100) | round | int %}
+<div class="page-head">
+   <div>
+      <span class="kicker reveal">archive/heart.csv</span>
+      <h1 class="reveal" style="--d:1">The dataset</h1>
+      <p class="lede reveal" style="--d:2">{{ stats.n }} patients, 13 clinical measurements each, and one answer: heart disease or not. Every model in this project learned from these rows.</p>
+   </div>
+</div>
+
+<section class="grid-3">
+   <div class="card stat reveal" style="--d:2"><b>{{ stats.n }}</b><span>patients</span></div>
+   <div class="card stat reveal" style="--d:3"><b>{{ stats.pos }}</b><span>with heart disease ({{ pos_pct }}%)</span></div>
+   <div class="card stat reveal" style="--d:4"><b>{{ stats.neg }}</b><span>without heart disease ({{ 100 - pos_pct }}%)</span></div>
+</section>
+
+<div class="card reveal" style="--d:4; margin-top: 18px">
+   <h3>Class balance</h3>
+   <p class="muted" style="margin-top: 4px">Fairly even, so a model can't score well by always guessing one answer.</p>
+   <div class="split-bar" role="img" aria-label="{{ stats.pos }} with heart disease, {{ stats.neg }} without">
+      <span class="seg pos" style="flex: {{ stats.pos }}" data-tip="With heart disease: {{ stats.pos }} patients">{{ stats.pos }} with disease</span>
+      <span class="seg neg" style="flex: {{ stats.neg }}" data-tip="Without heart disease: {{ stats.neg }} patients">{{ stats.neg }} without</span>
+   </div>
+</div>
+
+{# ── SMOTEENN: why this page still shows the original patients ── #}
+{% set sm = META.smoteenn %}
+<section class="section">
+   <span class="kicker">SMOTEENN</span>
+   <h2 style="margin-top: 10px">Why this page still shows {{ stats.n }} patients</h2>
+   <p class="lede">SMOTEENN never changes <code>heart.csv</code>. It runs during training, on a copy of the training patients only. Its synthetic patients are made up, so they don't belong in the real dataset, and the {{ META.test }} test patients are never touched, so the final score is measured on real people.</p>
+
+   <div class="flow reveal" style="--d:2">
+      <div class="flow-box"><b>{{ META.rows }}</b><span>unique patients<br><small>{{ META.rows_raw }} rows, 1 duplicate removed</small></span></div>
+      <div class="flow-arrow" aria-hidden="true">→</div>
+      <div class="flow-split">
+         <div class="flow-box"><b>{{ META.train }}</b><span>training patients<br><small>SMOTEENN runs here</small></span></div>
+         <div class="flow-box muted-box"><b>{{ META.test }}</b><span>test patients<br><small>held back, never resampled</small></span></div>
+      </div>
+   </div>
+
+   <div class="card" style="margin-top: 18px">
+      <h3>What SMOTEENN did to the {{ META.train }} training patients</h3>
+      <div class="legend">
+         <span><i class="key neg"></i>Without disease</span>
+         <span><i class="key pos"></i>With disease (real)</span>
+         <span><i class="key synth"></i>With disease (synthetic)</span>
+      </div>
+      {% set top = [sm.after_smote[0] + sm.after_smote[1], sm.before[0] + sm.before[1]] | max %}
+      {% set stages = [
+         ('Before', 'the real training patients', sm.before[0], sm.before[1], 0),
+         ('After SMOTE', 'adds ' ~ sm.synthetic_added ~ ' synthetic patients with disease to even out the classes', sm.after_smote[0], sm.before[1], sm.synthetic_added),
+         ('After ENN', 'removes ' ~ (sm.real_removed + sm.synthetic_added - sm.synthetic_kept) ~ ' patients whose neighbours mostly have the other diagnosis (' ~ sm.real_removed ~ ' real, ' ~ (sm.synthetic_added - sm.synthetic_kept) ~ ' synthetic)', sm.after_enn[0], sm.after_enn[1] - sm.synthetic_kept, sm.synthetic_kept),
+      ] %}
+      {% for title, what, healthy, sick, synth in stages %}
+      <div class="stage">
+         <div class="stage-label"><b>{{ title }}</b><small>{{ what }}</small></div>
+         <div class="stack" style="width: {{ ((healthy + sick + synth) / top * 100) | round(1) }}%">
+            <span class="neg" style="flex: {{ healthy }}" data-tip="{{ title }}: {{ healthy }} without disease">{{ healthy }}</span>
+            <span class="pos" style="flex: {{ sick }}" data-tip="{{ title }}: {{ sick }} real patients with disease">{{ sick }}</span>
+            {% if synth %}<span class="synth" style="flex: {{ synth }}" data-tip="{{ title }}: {{ synth }} synthetic patients with disease">{{ synth }}</span>{% endif %}
+         </div>
+         <b class="stage-total">{{ healthy + sick + synth }}</b>
+      </div>
+      {% endfor %}
+      <p class="muted" style="margin-top: 14px">The training set ends up the same size ({{ sm.after_enn[0] + sm.after_enn[1] }}), but {{ sm.synthetic_kept }} of its patients with disease are now synthetic and {{ sm.real_removed }} hard-to-classify real ones were set aside. This happens again inside every cross-validation fold.</p>
+   </div>
+</section>
+
+<section class="section">
+   <span class="kicker">Measurements</span>
+   <h2 style="margin-top: 10px">Average values by diagnosis</h2>
+   <div class="legend">
+      <span><i class="key pos"></i>With heart disease</span>
+      <span><i class="key neg"></i>Without heart disease</span>
+   </div>
+   <div class="card">
+      {% for k, mpos, mneg, top in stats.numeric %}
+      <div class="pair">
+         <div class="pair-label"><b>{{ GLOSSARY[k][0] }}</b><span class="muted">{{ FIELDS[k][1] }}</span></div>
+         <div class="pair-bars">
+            <div class="hbar"><i class="pos" style="width: {{ (mpos / top * 100) | round(1) }}%" data-tip="With heart disease: average {{ mpos }}"></i><span>{{ mpos }}</span></div>
+            <div class="hbar"><i class="neg" style="width: {{ (mneg / top * 100) | round(1) }}%" data-tip="Without heart disease: average {{ mneg }}"></i><span>{{ mneg }}</span></div>
+         </div>
+      </div>
+      {% endfor %}
+      <p class="muted" style="margin-top: 14px">Each bar is scaled to the largest value of that measurement in the dataset.</p>
+   </div>
+</section>
+
+<section class="section">
+   <span class="kicker">Groups</span>
+   <h2 style="margin-top: 10px">Share with heart disease, by group</h2>
+   <p class="lede">For each answer to a question, the share of those patients who have heart disease. Bigger gaps between rows mean the feature tells the groups apart better.</p>
+   <div class="grid-3" style="margin-top: 24px">
+      {% for k, groups in stats.categorical.items() %}
+      <div class="card">
+         <h3>{{ GLOSSARY[k][0] }}</h3>
+         <div class="shares">
+            {% for label, n, npos in groups %}
+            {% set share = (npos / n * 100) | round | int %}
+            <div class="share">
+               <span class="share-label">{{ label }}<small>{{ n }} patients</small></span>
+               <div class="track" data-tip="{{ GLOSSARY[k][0] }} {{ label }}: {{ npos }} of {{ n }} have heart disease"><i style="width: {{ share }}%"></i></div>
+               <b>{{ share }}%</b>
+            </div>
+            {% endfor %}
+         </div>
+      </div>
+      {% endfor %}
+   </div>
+</section>
+
+<section class="section">
+   <span class="kicker">Glossary</span>
+   <h2 style="margin-top: 10px">What each feature means, and who picked it</h2>
+   <div class="card table-card" style="margin-top: 24px">
+      <table class="table">
+         <thead><tr><th>Feature</th><th>Meaning</th>{% for key, m in MODELS.items() %}<th class="c">{{ m.name }}</th>{% endfor %}</tr></thead>
+         <tbody>
+            {% for k, (label, meaning) in GLOSSARY.items() %}
+            <tr>
+               <td><b>{{ label }}</b><br><code>{{ k }}</code></td>
+               <td>{{ meaning }}</td>
+               {% for key, m in MODELS.items() %}<td class="c">{% if k in m.fields %}<span class="tick" aria-label="selected">●</span>{% else %}<span class="muted" aria-label="not selected">–</span>{% endif %}</td>{% endfor %}
+            </tr>
+            {% endfor %}
+         </tbody>
+      </table>
+   </div>
+   <p class="muted" style="margin-top: 12px">Fasting blood sugar is the only feature no method selected.</p>
+</section>
+{% endblock %}

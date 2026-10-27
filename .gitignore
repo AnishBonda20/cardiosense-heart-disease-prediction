@@ -1,0 +1,20 @@
+# Private data: user accounts (names, emails, phone numbers) and prediction history.
+# The app creates an empty database on first run.
+signup.db
+*.db
+
+# Secrets and local settings
+.env
+.claude/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.ipynb_checkpoints/
+
+# Tool output and leftovers
+.playwright-mcp/
+presentation/render/
+**/templates_old/
+**/models_old/

@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import model_tabs, patient_fields, random_button with context %}
+{% block title %}Predict · {{ m.name }}{% endblock %}
+{% block content %}
+<div class="page-head">
+   <div>
+      <span class="kicker reveal">New prediction</span>
+      <h1 class="reveal" style="--d:1">Patient details</h1>
+   </div>
+   <div class="reveal" style="--d:2">{{ model_tabs('predict', key) }}</div>
+</div>
+
+<div class="layout">
+   <form class="card reveal" style="--d:2" id="patient" action="{{ url_for('predict', model=key) }}" method="POST">
+      {{ patient_fields(m.fields) }}
+      <div class="form-foot">
+         <button type="submit" class="btn primary">Predict</button>
+         {{ random_button(m.fields, rows) }}
+         <button type="reset" class="link plain">Clear</button>
+      </div>
+      <p class="muted" id="picked" role="status" style="margin-top: 12px" hidden></p>
+   </form>
+
+   <aside class="side">
+      <div class="card reveal" style="--d:3">
+         <span class="badge">{{ m.name }} model</span>
+         <h3 style="margin: 12px 0 8px">{{ m.long }}</h3>
+         <p>{{ m.blurb }} Uses {{ m.fields|length }} of the 13 clinical features, with a <b>{{ m.saved }}</b> classifier (the most accurate of 11 in cross-validation).</p>
+         <p style="margin-top: 14px"><a class="link" href="{{ url_for('insights', model=key) }}">See how it performed →</a></p>
+      </div>
+      <div class="card reveal" style="--d:4">
+         <h3 style="margin-bottom: 8px">Not sure which model?</h3>
+         <p>Run the same patient through all three at once.</p>
+         <p style="margin-top: 14px"><a class="link" href="{{ url_for('compare') }}">Compare models →</a></p>
+      </div>
+   </aside>
+</div>
+{% endblock %}

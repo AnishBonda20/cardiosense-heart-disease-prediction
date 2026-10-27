@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import ring, value_text, risk_text, explanation with context %}
+{% block title %}Result · {{ m.name }}{% endblock %}
+{% block content %}
+<div class="page-head">
+   <div>
+      <span class="kicker reveal">{{ m.name }} model result</span>
+      <h1 class="reveal" style="--d:1">Prediction</h1>
+   </div>
+</div>
+
+<div class="card result {{ 'tone-pos' if positive else 'tone-neg' }} reveal" style="--d:2">
+   {{ ring(risk, positive) }}
+   <div>
+      <span class="verdict">{{ 'POSITIVE' if positive else 'NEGATIVE' }}</span>
+      <h2 style="margin-top: 14px">{{ 'Signs of heart disease are likely.' if positive else 'Signs of heart disease are unlikely.' }}</h2>
+      <p class="lede">The {{ m.long }} model gives this patient a {{ risk_text(risk) }} chance of heart disease, based on the {{ inputs|length }} values below.</p>
+      <div class="chips">
+         {% for f, v in inputs %}<span>{{ FIELDS[f][0] }} <b>{{ value_text(f, v) }}</b></span>{% endfor %}
+      </div>
+      {% if actual is not none %}
+      {% set right = actual == positive %}
+      {% set best = m.results | selectattr('name', 'equalto', m.saved) | first %}
+      <div class="truth {{ 'ok' if right else 'miss' }}">
+         <b>{{ '✓ Correct' if right else '✗ Wrong' }}</b>
+         <span>This is patient {{ row + 1 }} from heart.csv, who really {{ 'has' if actual else 'does not have' }} heart disease.
+            Across many patients this model is right about {{ (best.cv_mean * 100) | round | int }}% of the time (cross-validated).</span>
+      </div>
+      {% endif %}
+      <div class="note">This is a model trained on a 303-patient study dataset, not a diagnosis. A doctor should confirm any result.</div>
+      {# Compare the SAME patient with all three models: the values (and dataset row, if any) go along. #}
+      <form class="form-foot" action="{{ url_for('compare') }}" method="POST">
+         {% for f, v in inputs %}<input type="hidden" name="{{ f }}" value="{{ v }}">{% endfor %}
+         <input type="hidden" name="row" value="{{ row if row is not none else '' }}">
+         <input type="hidden" name="carry" value="1">
+         <button type="submit" class="btn primary">Compare this patient with all 3 methods</button>
+         <a class="btn ghost" href="{{ url_for('predict', model=key) }}">New prediction</a>
+         <button type="button" class="btn ghost" data-print>Print / save as PDF</button>
+         <a class="link" href="{{ url_for('history') }}">See history</a>
+      </form>
+   </div>
+</div>
+<div class="reveal" style="--d:3; margin-top: 18px">{{ explanation(inputs) }}</div>
+{% endblock %}

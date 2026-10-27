@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CardioSense report diagrams</title>
+<style>
+  body { margin: 0; background: #fff; font-family: Arial, 'Segoe UI', sans-serif; }
+  .fig { width: 1200px; padding: 24px; background: #fff; box-sizing: border-box; }
+  svg { display: block; }
+  text { font-family: Arial, 'Segoe UI', sans-serif; fill: #1C2B31; }
+  .t { font-size: 17px; font-weight: 700; }
+  .s { font-size: 14px; fill: #4B5B61; }
+  .l { font-size: 13px; fill: #4B5B61; paint-order: stroke; stroke: #fff; stroke-width: 5px; stroke-linejoin: round; }
+  .h { font-size: 13px; font-weight: 700; letter-spacing: 1.5px; fill: #B8323A; }
+  .box { fill: #FFFFFF; stroke: #1C2B31; stroke-width: 1.5; }
+  .soft { fill: #F6F1EC; stroke: #CFC5BB; stroke-width: 1.2; }
+  .key { fill: #FDEDEC; stroke: #D93E47; stroke-width: 1.8; }
+  .ln { stroke: #1C2B31; stroke-width: 1.6; fill: none; }
+  .dash { stroke: #6E7B80; stroke-width: 1.4; fill: none; stroke-dasharray: 6 5; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#1C2B31"/></marker>
+    <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#6E7B80"/></marker>
+    <marker id="tri" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto"><path d="M0 0L12 6L0 12z" fill="#fff" stroke="#1C2B31" stroke-width="1.2"/></marker>
+    <marker id="dia" viewBox="0 0 14 10" refX="13" refY="5" markerWidth="14" markerHeight="10" orient="auto"><path d="M0 5L7 0L14 5L7 10z" fill="#1C2B31"/></marker>
+  </defs>
+</svg>
+
+<!-- ───────────── Fig: System architecture ───────────── -->
+<div class="fig" id="architecture">
+<svg width="1152" height="700" viewBox="0 0 1152 700">
+  <!-- presentation -->
+  <text class="h" x="20" y="24">PRESENTATION LAYER · BROWSER</text>
+  <rect class="soft" x="10" y="34" width="1132" height="96" rx="12"/>
+  <rect class="box" x="30" y="52" width="340" height="60" rx="8"/><text class="t" x="50" y="78">Jinja2 templates</text><text class="s" x="50" y="99">15 pages, shared base and macros</text>
+  <rect class="box" x="406" y="52" width="340" height="60" rx="8"/><text class="t" x="426" y="78">app.css</text><text class="s" x="426" y="99">Light and dark themes, responsive</text>
+  <rect class="box" x="782" y="52" width="340" height="60" rx="8"/><text class="t" x="802" y="78">app.js</text><text class="s" x="802" y="99">Dropdowns, random patient, tooltips</text>
+
+  <line class="ln" x1="576" y1="132" x2="576" y2="170" marker-end="url(#a)" marker-start="url(#a)"/>
+  <text class="l" x="590" y="156">HTTP requests / HTML responses</text>
+
+  <!-- application -->
+  <text class="h" x="20" y="194">APPLICATION LAYER · FLASK (app.py)</text>
+  <rect class="soft" x="10" y="204" width="1132" height="196" rx="12"/>
+  <rect class="key" x="30" y="222" width="250" height="74" rx="8"/><text class="t" x="46" y="250">Authentication</text><text class="s" x="46" y="272">Sign-up, email OTP, login,</text><text class="s" x="46" y="289">sessions, hashed passwords</text>
+  <rect class="box" x="304" y="222" width="250" height="74" rx="8"/><text class="t" x="320" y="250">Input validation</text><text class="s" x="320" y="272">FIELDS rules, read_inputs(),</text><text class="s" x="320" y="289">matching_row()</text>
+  <rect class="key" x="578" y="222" width="250" height="74" rx="8"/><text class="t" x="594" y="250">Prediction service</text><text class="s" x="594" y="272">run_model(), risk score,</text><text class="s" x="594" y="289">explain()</text>
+  <rect class="box" x="852" y="222" width="270" height="74" rx="8"/><text class="t" x="868" y="250">Comparison</text><text class="s" x="868" y="272">Same patient through all</text><text class="s" x="868" y="289">three methods, ✓/✗ vs truth</text>
+  <rect class="box" x="30" y="310" width="352" height="74" rx="8"/><text class="t" x="46" y="338">Dataset analytics</text><text class="s" x="46" y="360">Class balance, group shares,</text><text class="s" x="46" y="377">SMOTEENN stages, glossary</text>
+  <rect class="box" x="400" y="310" width="352" height="74" rx="8"/><text class="t" x="416" y="338">Model insights</text><text class="s" x="416" y="360">Leaderboard, ROC, confusion matrix,</text><text class="s" x="416" y="377">selection scores, stacking experiment</text>
+  <rect class="box" x="770" y="310" width="352" height="74" rx="8"/><text class="t" x="786" y="338">History</text><text class="s" x="786" y="360">Per-user saved predictions,</text><text class="s" x="786" y="377">clear history</text>
+
+  <line class="ln" x1="300" y1="402" x2="300" y2="458" marker-end="url(#a)" marker-start="url(#a)"/>
+  <line class="ln" x1="700" y1="402" x2="700" y2="458" marker-start="url(#a)"/>
+  <line class="dash" x1="1000" y1="402" x2="1000" y2="458" marker-end="url(#ag)"/>
+  <text class="l" x="1012" y="436">OTP email</text>
+
+  <!-- data -->
+  <text class="h" x="20" y="482">DATA AND MODEL LAYER</text>
+  <rect class="soft" x="10" y="492" width="880" height="110" rx="12"/>
+  <rect class="box" x="30" y="512" width="200" height="74" rx="8"/><text class="t" x="46" y="540">signup.db</text><text class="s" x="46" y="562">SQLite: info (users),</text><text class="s" x="46" y="579">predictions</text>
+  <rect class="box" x="248" y="512" width="200" height="74" rx="8"/><text class="t" x="264" y="540">models/*.sav</text><text class="s" x="264" y="562">Best classifier per</text><text class="s" x="264" y="579">method (joblib)</text>
+  <rect class="box" x="466" y="512" width="200" height="74" rx="8"/><text class="t" x="482" y="540">metrics.json</text><text class="s" x="482" y="562">Features, results, ROC,</text><text class="s" x="482" y="579">SMOTEENN counts</text>
+  <rect class="box" x="684" y="512" width="190" height="74" rx="8"/><text class="t" x="700" y="540">heart.csv</text><text class="s" x="700" y="562">303 patients,</text><text class="s" x="700" y="579">labels fixed</text>
+  <rect class="box" x="922" y="500" width="200" height="98" rx="8" style="stroke-dasharray:6 4"/><text class="t" x="938" y="530">Gmail SMTP</text><text class="s" x="938" y="552">External service,</text><text class="s" x="938" y="569">credentials from</text><text class="s" x="938" y="586">environment variables</text>
+
+  <!-- offline training -->
+  <rect class="key" x="230" y="630" width="660" height="56" rx="8"/>
+  <text class="t" x="248" y="656">Offline training · train.py and experiment_stacking.py</text>
+  <text class="s" x="248" y="676">Split → SMOTEENN → SelectKBest → 11 classifiers → best by CV → models + metrics</text>
+  <line class="ln" x1="350" y1="628" x2="350" y2="590" marker-end="url(#a)"/>
+  <line class="ln" x1="566" y1="628" x2="566" y2="590" marker-end="url(#a)"/>
+  <line class="ln" x1="780" y1="590" x2="780" y2="628" marker-end="url(#a)"/>
+</svg>
+</div>
+
+<!-- ───────────── Fig: DFD level 0 ───────────── -->
+<div class="fig" id="dfd0">
+<svg width="1152" height="380" viewBox="0 0 1152 380">
+  <rect class="box" x="30" y="125" width="200" height="80"/><text class="t" x="130" y="171" text-anchor="middle">User</text>
+  <circle class="key" cx="576" cy="165" r="120"/><text class="t" x="576" y="158" text-anchor="middle">0.0</text><text class="t" x="576" y="182" text-anchor="middle">CardioSense System</text>
+  <rect class="box" x="922" y="125" width="200" height="80"/><text class="t" x="1022" y="171" text-anchor="middle">Email service</text>
+  <path class="ln" d="M232 140 L456 140" marker-end="url(#a)"/><text class="l" x="250" y="128">Registration, login, patient values</text>
+  <path class="ln" d="M456 192 L232 192" marker-end="url(#a)"/><text class="l" x="250" y="214">Risk score, verdict, charts, history</text>
+  <path class="ln" d="M696 150 L920 150" marker-end="url(#a)"/><text class="l" x="712" y="138">OTP message request</text>
+  <path class="ln" d="M1022 207 V 330 H 130 V 209" marker-end="url(#a)"/><text class="l" x="576" y="352" text-anchor="middle">6-digit OTP email to the user</text>
+</svg>
+</div>
+
+<!-- ───────────── Fig: DFD level 1 ───────────── -->
+<div class="fig" id="dfd1">
+<svg width="1152" height="680" viewBox="0 0 1152 680">
+  <rect class="box" x="20" y="305" width="150" height="70"/><text class="t" x="95" y="346" text-anchor="middle">User</text>
+  <circle class="key" cx="470" cy="70" r="54"/><text class="t" x="470" y="66" text-anchor="middle">1.0</text><text x="470" y="86" text-anchor="middle" style="font-size:13px;fill:#4B5B61">Register + OTP</text>
+  <circle class="key" cx="470" cy="178" r="54"/><text class="t" x="470" y="174" text-anchor="middle">2.0</text><text x="470" y="194" text-anchor="middle" style="font-size:13px;fill:#4B5B61">Log in</text>
+  <circle class="key" cx="470" cy="286" r="54"/><text class="t" x="470" y="282" text-anchor="middle">3.0</text><text x="470" y="302" text-anchor="middle" style="font-size:13px;fill:#4B5B61">Predict</text>
+  <circle class="key" cx="470" cy="394" r="54"/><text class="t" x="470" y="390" text-anchor="middle">4.0</text><text x="470" y="410" text-anchor="middle" style="font-size:13px;fill:#4B5B61">Compare</text>
+  <circle class="key" cx="470" cy="502" r="54"/><text class="t" x="470" y="498" text-anchor="middle">5.0</text><text x="470" y="518" text-anchor="middle" style="font-size:13px;fill:#4B5B61">Dataset / Insights</text>
+  <circle class="key" cx="470" cy="610" r="54"/><text class="t" x="470" y="606" text-anchor="middle">6.0</text><text x="470" y="626" text-anchor="middle" style="font-size:13px;fill:#4B5B61">View history</text>
+  <path class="ln" d="M172 340 L414 70" marker-end="url(#a)"/>
+  <text class="l" x="300" y="194" text-anchor="middle">details, OTP</text>
+  <path class="ln" d="M172 340 L414 178" marker-end="url(#a)"/>
+  <text class="l" x="300" y="250" text-anchor="middle">credentials</text>
+  <path class="ln" d="M172 340 L414 286" marker-end="url(#a)"/>
+  <text class="l" x="300" y="306" text-anchor="middle">patient values</text>
+  <path class="ln" d="M172 340 L414 394" marker-end="url(#a)"/>
+  <text class="l" x="300" y="362" text-anchor="middle">same patient</text>
+  <path class="ln" d="M172 340 L414 502" marker-end="url(#a)"/>
+  <text class="l" x="300" y="418" text-anchor="middle">page request</text>
+  <path class="ln" d="M172 340 L414 610" marker-end="url(#a)"/>
+  <text class="l" x="300" y="474" text-anchor="middle">clear request</text>
+  <path class="ln" d="M840 104 H1130 M840 144 H1130"/><text class="t" x="852" y="130">D1</text><text class="s" x="896" y="130">Users (signup.db: info)</text>
+  <path class="ln" d="M840 290 H1130 M840 330 H1130"/><text class="t" x="852" y="316">D2</text><text class="s" x="896" y="316">Models + metrics.json</text>
+  <path class="ln" d="M840 420 H1130 M840 460 H1130"/><text class="t" x="852" y="446">D3</text><text class="s" x="896" y="446">heart.csv (303 patients)</text>
+  <path class="ln" d="M840 580 H1130 M840 620 H1130"/><text class="t" x="852" y="606">D4</text><text class="s" x="896" y="606">Predictions (signup.db)</text>
+  <path class="ln" d="M526 70 L838 116" marker-end="url(#a)"/>
+  <text class="l" x="682" y="88" text-anchor="middle">new user, hashed password</text>
+  <path class="ln" d="M838 132 L526 178" marker-end="url(#a)"/>
+  <text class="l" x="682" y="150" text-anchor="middle">stored hash</text>
+  <path class="ln" d="M838 302 L526 278" marker-end="url(#a)"/>
+  <text class="l" x="613" y="280" text-anchor="middle">saved model</text>
+  <path class="ln" d="M838 444 L526 296" marker-end="url(#a)"/>
+  <text class="l" x="613" y="332" text-anchor="middle">real diagnosis</text>
+  <path class="ln" d="M838 312 L526 386" marker-end="url(#a)"/>
+  <text class="l" x="613" y="360" text-anchor="middle">3 saved models</text>
+  <path class="ln" d="M838 448 L526 402" marker-end="url(#a)"/>
+  <text class="l" x="613" y="410" text-anchor="middle">full patient record</text>
+  <path class="ln" d="M838 322 L526 494" marker-end="url(#a)"/>
+  <text class="l" x="613" y="441" text-anchor="middle">results</text>
+  <path class="ln" d="M838 452 L526 510" marker-end="url(#a)"/>
+  <text class="l" x="613" y="489" text-anchor="middle">statistics</text>
+  <path class="ln" d="M526 296 L838 588" marker-end="url(#a)"/>
+  <text class="l" x="707" y="460" text-anchor="middle">prediction record</text>
+  <path class="ln" d="M526 402 L838 594" marker-end="url(#a)"/>
+  <text class="l" x="719" y="516" text-anchor="middle">3 prediction records</text>
+  <path class="ln" d="M838 610 L526 610" marker-end="url(#a)"/>
+  <text class="l" x="682" y="605" text-anchor="middle">saved predictions</text>
+</svg>
+</div>
+
+<!-- ───────────── Fig: Use case ───────────── -->
+<div class="fig" id="usecase">
+<svg width="1152" height="640" viewBox="0 0 1152 640">
+  <rect x="250" y="20" width="620" height="600" rx="16" fill="#FBF8F5" stroke="#1C2B31" stroke-width="1.5"/>
+  <text class="t" x="270" y="48">CardioSense web application</text>
+  <!-- actors -->
+  <g transform="translate(110,250)"><circle cx="0" cy="0" r="18" class="box"/><path class="ln" d="M0 18 V70 M-30 38 H30 M0 70 L-24 110 M0 70 L24 110"/><text class="t" x="0" y="138" text-anchor="middle">User</text></g>
+  <g transform="translate(1030,140)"><circle cx="0" cy="0" r="18" class="box"/><path class="ln" d="M0 18 V70 M-30 38 H30 M0 70 L-24 110 M0 70 L24 110"/><text class="t" x="0" y="138" text-anchor="middle">Email service</text></g>
+  <g transform="translate(1030,430)"><circle cx="0" cy="0" r="18" class="box"/><path class="ln" d="M0 18 V70 M-30 38 H30 M0 70 L-24 110 M0 70 L24 110"/><text class="t" x="0" y="138" text-anchor="middle">Developer</text></g>
+  <!-- use cases (centre x 560) -->
+  <g class="uc">
+    <ellipse class="key" cx="430" cy="90" rx="150" ry="26"/><text class="s" x="430" y="95" text-anchor="middle">Register and verify OTP</text>
+    <ellipse class="box" cx="430" cy="150" rx="150" ry="26"/><text class="s" x="430" y="155" text-anchor="middle">Log in / log out</text>
+    <ellipse class="key" cx="430" cy="210" rx="150" ry="26"/><text class="s" x="430" y="215" text-anchor="middle">Predict with one method</text>
+    <ellipse class="box" cx="430" cy="270" rx="150" ry="26"/><text class="s" x="430" y="275" text-anchor="middle">Fill a random dataset patient</text>
+    <ellipse class="key" cx="430" cy="330" rx="150" ry="26"/><text class="s" x="430" y="335" text-anchor="middle">Compare all three methods</text>
+    <ellipse class="box" cx="430" cy="390" rx="150" ry="26"/><text class="s" x="430" y="395" text-anchor="middle">View dataset analytics</text>
+    <ellipse class="box" cx="430" cy="450" rx="150" ry="26"/><text class="s" x="430" y="455" text-anchor="middle">View model insights</text>
+    <ellipse class="box" cx="430" cy="510" rx="150" ry="26"/><text class="s" x="430" y="515" text-anchor="middle">View / clear history</text>
+    <ellipse class="box" cx="430" cy="570" rx="150" ry="26"/><text class="s" x="430" y="575" text-anchor="middle">Print / save result as PDF</text>
+    <ellipse class="box" cx="720" cy="430" rx="130" ry="26"/><text class="s" x="720" y="435" text-anchor="middle">Retrain models</text>
+    <ellipse class="box" cx="720" cy="500" rx="130" ry="26"/><text class="s" x="720" y="505" text-anchor="middle">Run stacking experiment</text>
+    <ellipse class="box" cx="720" cy="560" rx="130" ry="26"/><text class="s" x="720" y="565" text-anchor="middle">Run automated tests</text>
+  </g>
+  <!-- associations -->
+  <g class="ln" stroke="#1C2B31" stroke-width="1.3">
+    <line x1="140" y1="280" x2="282" y2="94"/><line x1="140" y1="285" x2="281" y2="153"/><line x1="140" y1="290" x2="281" y2="212"/>
+    <line x1="140" y1="292" x2="281" y2="270"/><line x1="140" y1="296" x2="281" y2="328"/><line x1="140" y1="300" x2="281" y2="388"/>
+    <line x1="140" y1="304" x2="282" y2="446"/><line x1="140" y1="308" x2="283" y2="505"/><line x1="140" y1="312" x2="285" y2="565"/>
+    <line x1="580" y1="90" x2="1000" y2="165"/>
+    <line x1="850" y1="432" x2="1000" y2="470"/><line x1="850" y1="500" x2="1000" y2="476"/><line x1="850" y1="560" x2="1000" y2="482"/>
+  </g>
+  <path class="dash" d="M580 220 C 640 240, 640 300, 580 322" marker-end="url(#ag)"/><text class="l" x="640" y="270">«extend»</text>
+  <path class="dash" d="M535 252 L540 228" marker-end="url(#ag)"/>
+</svg>
+</div>
+
+<!-- ───────────── Fig: Class diagram ───────────── -->
+<div class="fig" id="classes">
+<svg width="1152" height="700" viewBox="0 0 1152 700">
+  <!-- helper: class box = title band + attributes + methods -->
+  <g>
+    <rect class="box" x="20" y="20" width="340" height="250"/><rect x="20" y="20" width="340" height="40" fill="#1C2B31"/>
+    <text x="190" y="46" text-anchor="middle" style="fill:#fff;font-size:17px;font-weight:700">FlaskApp «app.py»</text>
+    <text class="s" x="34" y="82">- secret_key: str</text><text class="s" x="34" y="102">- PENDING: dict[token → signup]</text>
+    <line x1="20" y1="116" x2="360" y2="116" stroke="#1C2B31"/>
+    <text class="s" x="34" y="138">+ signup() / predict_lo()</text><text class="s" x="34" y="158">+ signin() / logout()</text>
+    <text class="s" x="34" y="178">+ predict(model)</text><text class="s" x="34" y="198">+ compare()</text>
+    <text class="s" x="34" y="218">+ dataset() / insights(model)</text><text class="s" x="34" y="238">+ history() / clear_history()</text><text class="s" x="34" y="258">+ login_required(view)</text>
+  </g>
+  <g>
+    <rect class="box" x="420" y="20" width="330" height="230"/><rect x="420" y="20" width="330" height="40" fill="#B8323A"/>
+    <text x="585" y="46" text-anchor="middle" style="fill:#fff;font-size:17px;font-weight:700">MethodModel «MODELS»</text>
+    <text class="s" x="434" y="82">+ name, long, blurb: str</text><text class="s" x="434" y="102">+ fields: list[str]</text>
+    <text class="s" x="434" y="122">+ saved: str (best classifier)</text><text class="s" x="434" y="142">+ results, roc, confusion</text>
+    <line x1="420" y1="156" x2="750" y2="156" stroke="#1C2B31"/>
+    <text class="s" x="434" y="178">+ run_model(values)</text><text class="s" x="434" y="198">   → (positive, risk)</text>
+    <text class="s" x="434" y="218">+ estimator: joblib model</text>
+  </g>
+  <g>
+    <rect class="box" x="810" y="20" width="320" height="210"/><rect x="810" y="20" width="320" height="40" fill="#1C2B31"/>
+    <text x="970" y="46" text-anchor="middle" style="fill:#fff;font-size:17px;font-weight:700">FieldRule «FIELDS»</text>
+    <text class="s" x="824" y="82">+ label, unit: str</text><text class="s" x="824" y="102">+ range (min, max, step)</text><text class="s" x="824" y="122">  or choices [(code, name, desc)]</text>
+    <line x1="810" y1="136" x2="1130" y2="136" stroke="#1C2B31"/>
+    <text class="s" x="824" y="158">+ read_inputs(fields, form)</text><text class="s" x="824" y="178">+ info_text(f)</text><text class="s" x="824" y="198">+ explain(inputs)</text>
+  </g>
+  <g>
+    <rect class="box" x="20" y="340" width="300" height="200"/><rect x="20" y="340" width="300" height="40" fill="#1C2B31"/>
+    <text x="170" y="366" text-anchor="middle" style="fill:#fff;font-size:17px;font-weight:700">User «info table»</text>
+    <text class="s" x="34" y="402">+ user: str (unique)</text><text class="s" x="34" y="422">+ email, mobile, name</text><text class="s" x="34" y="442">+ password: str (hash)</text>
+    <line x1="20" y1="456" x2="320" y2="456" stroke="#1C2B31"/>
+    <text class="s" x="34" y="478">+ generate_password_hash()</text><text class="s" x="34" y="498">+ check_password_hash()</text>
+  </g>
+  <g>
+    <rect class="box" x="380" y="340" width="320" height="200"/><rect x="380" y="340" width="320" height="40" fill="#1C2B31"/>
+    <text x="540" y="366" text-anchor="middle" style="fill:#fff;font-size:17px;font-weight:700">Prediction «predictions»</text>
+    <text class="s" x="394" y="402">+ user, model: str</text><text class="s" x="394" y="422">+ inputs: JSON</text><text class="s" x="394" y="442">+ positive: bool, risk: float</text><text class="s" x="394" y="462">+ created: datetime</text>
+    <line x1="380" y1="476" x2="700" y2="476" stroke="#1C2B31"/>
+    <text class="s" x="394" y="498">+ save_prediction(...)</text>
+  </g>
+  <g>
+    <rect class="box" x="760" y="300" width="370" height="250"/><rect x="760" y="300" width="370" height="40" fill="#B8323A"/>
+    <text x="945" y="326" text-anchor="middle" style="fill:#fff;font-size:17px;font-weight:700">Trainer «train.py»</text>
+    <text class="s" x="774" y="362">+ SEED = 42, METHODS: {k → (file, score, k)}</text><text class="s" x="774" y="382">+ CATEGORICAL: list[int]</text>
+    <line x1="760" y1="396" x2="1130" y2="396" stroke="#1C2B31"/>
+    <text class="s" x="774" y="418">+ load() → X, y</text><text class="s" x="774" y="438">+ _smoteenn(X, y, counts)</text>
+    <text class="s" x="774" y="458">+ classifiers() → 11 models</text><text class="s" x="774" y="478">+ main(): split, select, train,</text><text class="s" x="774" y="498">   cross-validate, pick best,</text><text class="s" x="774" y="518">   save .sav + metrics.json</text>
+  </g>
+  <g>
+    <rect class="box" x="380" y="600" width="320" height="86"/><rect x="380" y="600" width="320" height="40" fill="#1C2B31"/>
+    <text x="540" y="626" text-anchor="middle" style="fill:#fff;font-size:17px;font-weight:700">Dataset «DATASET, STATS»</text>
+    <text class="s" x="394" y="664">+ 303 rows · dataset_stats() · matching_row()</text>
+  </g>
+  <!-- relations -->
+  <line class="ln" x1="360" y1="120" x2="418" y2="120" marker-end="url(#dia)"/><text class="l" x="364" y="110">3</text>
+  <line class="ln" x1="750" y1="120" x2="808" y2="120" style="stroke-dasharray:6 4" marker-end="url(#a)"/><text class="l" x="779" y="110" text-anchor="middle">uses</text>
+  <line class="ln" x1="170" y1="270" x2="170" y2="338" marker-end="url(#a)"/><text class="l" x="180" y="310">authenticates</text>
+  <line class="ln" x1="360" y1="240" x2="500" y2="338" marker-end="url(#a)"/><text class="l" x="452" y="292">records</text>
+  <line class="ln" x1="320" y1="440" x2="378" y2="440"/><text class="l" x="326" y="432">1</text><text class="l" x="364" y="432">*</text>
+  <line class="ln" x1="945" y1="298" x2="700" y2="196" style="stroke-dasharray:6 4" marker-end="url(#a)"/><text class="l" x="810" y="260">writes</text>
+  <path class="ln" d="M345 270 V 643 H 378" style="stroke-dasharray:6 4" marker-end="url(#a)"/><text class="l" x="345" y="590" text-anchor="middle">reads</text>
+</svg>
+</div>
+
+<!-- ───────────── Fig: Sequence diagram ───────────── -->
+<div class="fig" id="sequence">
+<svg width="1152" height="720" viewBox="0 0 1152 720">
+  <g>
+    <rect class="box" x="20" y="20" width="140" height="44" rx="6"/><text class="t" x="90" y="48" text-anchor="middle">User</text>
+    <rect class="box" x="210" y="20" width="150" height="44" rx="6"/><text class="t" x="285" y="48" text-anchor="middle">Browser</text>
+    <rect class="key" x="410" y="20" width="170" height="44" rx="6"/><text class="t" x="495" y="48" text-anchor="middle">Flask app</text>
+    <rect class="box" x="630" y="20" width="150" height="44" rx="6"/><text class="t" x="705" y="48" text-anchor="middle">read_inputs</text>
+    <rect class="box" x="830" y="20" width="140" height="44" rx="6"/><text class="t" x="900" y="48" text-anchor="middle">Model</text>
+    <rect class="box" x="1010" y="20" width="130" height="44" rx="6"/><text class="t" x="1075" y="48" text-anchor="middle">signup.db</text>
+  </g>
+  <g class="dash"><line x1="90" y1="64" x2="90" y2="705"/><line x1="285" y1="64" x2="285" y2="705"/><line x1="495" y1="64" x2="495" y2="705"/><line x1="705" y1="64" x2="705" y2="705"/><line x1="900" y1="64" x2="900" y2="705"/><line x1="1075" y1="64" x2="1075" y2="705"/></g>
+  <!-- activation bars -->
+  <rect x="488" y="150" width="14" height="300" fill="#FDEDEC" stroke="#D93E47"/>
+  <rect x="488" y="520" width="14" height="170" fill="#FDEDEC" stroke="#D93E47"/>
+  <g>
+    <line class="ln" x1="90" y1="100" x2="283" y2="100" marker-end="url(#a)"/><text class="l" x="100" y="92">1. Random patient → Predict</text>
+    <line class="ln" x1="285" y1="150" x2="486" y2="150" marker-end="url(#a)"/><text class="l" x="296" y="142">2. POST /predict/anova (values, row)</text>
+    <line class="ln" x1="502" y1="190" x2="703" y2="190" marker-end="url(#a)"/><text class="l" x="512" y="182">3. validate each field</text>
+    <line class="dash" x1="703" y1="225" x2="504" y2="225" marker-end="url(#ag)"/><text class="l" x="540" y="217">4. values in model order</text>
+    <line class="ln" x1="502" y1="265" x2="898" y2="265" marker-end="url(#a)"/><text class="l" x="600" y="257">5. run_model(values)</text>
+    <line class="dash" x1="898" y1="300" x2="504" y2="300" marker-end="url(#ag)"/><text class="l" x="600" y="292">6. (positive, risk)</text>
+    <line class="ln" x1="502" y1="340" x2="1073" y2="340" marker-end="url(#a)"/><text class="l" x="700" y="332">7. save_prediction()</text>
+    <path class="ln" d="M502 370 h40 v30 h-38" marker-end="url(#a)"/><text class="l" x="552" y="392">8. matching_row() → real diagnosis, explain()</text>
+    <line class="dash" x1="486" y1="440" x2="287" y2="440" marker-end="url(#ag)"/><text class="l" x="296" y="432">9. result page: ring, ✓/✗, what stands out</text>
+    <line class="ln" x1="90" y1="480" x2="283" y2="480" marker-end="url(#a)"/><text class="l" x="100" y="472">10. Compare this patient</text>
+    <line class="ln" x1="285" y1="520" x2="486" y2="520" marker-end="url(#a)"/><text class="l" x="296" y="512">11. POST /compare (values, row, carry)</text>
+    <path class="ln" d="M502 550 h40 v30 h-38" marker-end="url(#a)"/><text class="l" x="552" y="572">12. row verified → full 12-value patient</text>
+    <line class="ln" x1="502" y1="610" x2="898" y2="610" marker-end="url(#a)"/><text class="l" x="600" y="602">13. run_model × 3 methods</text>
+    <line class="ln" x1="502" y1="640" x2="1073" y2="640" marker-end="url(#a)"/><text class="l" x="700" y="632">14. save 3 predictions</text>
+    <line class="dash" x1="486" y1="680" x2="287" y2="680" marker-end="url(#ag)"/><text class="l" x="296" y="672">15. three cards, "n of 3 correct"</text>
+  </g>
+</svg>
+</div>
+</body>
+</html>

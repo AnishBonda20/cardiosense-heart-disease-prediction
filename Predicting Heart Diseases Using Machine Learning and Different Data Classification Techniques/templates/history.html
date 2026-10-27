@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import value_text, risk_text with context %}
+{% block title %}History{% endblock %}
+{% block content %}
+<div class="page-head">
+   <div>
+      <span class="kicker reveal">Your predictions</span>
+      <h1 class="reveal" style="--d:1">History</h1>
+      <p class="lede reveal" style="--d:2">Every prediction you've run, newest first. Only you can see these.</p>
+   </div>
+   {% if entries %}
+   <form method="POST" action="{{ url_for('clear_history') }}" class="reveal" style="--d:2" data-confirm="Delete all {{ entries | length }} predictions from your history? This can't be undone.">
+      <button type="submit" class="btn ghost small">Clear history</button>
+   </form>
+   {% endif %}
+</div>
+
+{% if entries %}
+<div class="card table-card reveal" style="--d:2">
+   <table class="table history">
+      <thead><tr><th>When</th><th>Model</th><th>Result</th><th class="r">Risk</th><th>Patient</th></tr></thead>
+      <tbody>
+         {% for e in entries %}
+         <tr class="{{ 'tone-pos' if e.positive else 'tone-neg' }}">
+            <td class="nowrap">{{ e.created }}</td>
+            <td><span class="badge">{{ MODELS[e.model].name }}</span></td>
+            <td><span class="verdict sm">{{ 'POSITIVE' if e.positive else 'NEGATIVE' }}</span></td>
+            <td class="r"><b>{{ risk_text(e.risk) }}</b></td>
+            <td class="muted small">
+               {% for f, v in e.inputs.items() %}{{ FIELDS[f][0] }} {{ value_text(f, v) }}{{ ' · ' if not loop.last }}{% endfor %}
+            </td>
+         </tr>
+         {% endfor %}
+      </tbody>
+   </table>
+</div>
+{% else %}
+<div class="card empty reveal" style="--d:2">
+   <h3>No predictions yet</h3>
+   <p class="muted">Run your first one and it'll show up here.</p>
+   <div class="form-foot" style="justify-content: center; border: 0">
+      <a class="btn primary" href="{{ url_for('predict', model='anova') }}">Start a prediction</a>
+      <a class="btn ghost" href="{{ url_for('compare') }}">Compare models</a>
+   </div>
+</div>
+{% endif %}
+{% endblock %}

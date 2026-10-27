@@ -1,0 +1,20 @@
+[
+ {
+  "name": "Naive Bayes + KNN + Logistic Regression",
+  "anova": 0.8381,
+  "chi2": 0.8257,
+  "mi": 0.8298
+ },
+ {
+  "name": "Naive Bayes + KNN + LR + SVM + Random Forest",
+  "anova": 0.834,
+  "chi2": 0.8133,
+  "mi": 0.8257
+ },
+ {
+  "name": "Naive Bayes + LR + Random Forest + Extra Trees",
+  "anova": 0.834,
+  "chi2": 0.8298,
+  "mi": 0.834
+ }
+]

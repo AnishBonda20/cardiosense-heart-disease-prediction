@@ -1,0 +1,17 @@
+{% extends 'auth.html' %}
+{% block title %}Verify email{% endblock %}
+{% block art_title %}One last step.{% endblock %}
+{% block form %}
+<div>
+   <h1>Check your inbox</h1>
+   <p class="muted" style="margin-top: 6px">Enter the 6-digit code we emailed you. It expires in 5 minutes.</p>
+</div>
+<form action="{{ url_for('predict_lo') }}" method="POST" style="display: grid; gap: 16px">
+   <div class="field">
+      <label for="otp">Verification code</label>
+      <input id="otp" class="otp" type="text" name="message" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required autofocus>
+   </div>
+   <button type="submit" class="btn primary">Verify and create account</button>
+</form>
+<p class="muted">Wrong email? <a class="link" href="{{ url_for('logon') }}">Start over</a></p>
+{% endblock %}

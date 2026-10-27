@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import ring, value_text, risk_text, explanation with context %}
+{% block title %}Comparison{% endblock %}
+{% block content %}
+{% set n_pos = results | selectattr('2') | list | length %}
+{% set n_right = (results | selectattr('2', 'equalto', actual) | list | length) if actual is not none else none %}
+<div class="page-head">
+   <div>
+      <span class="kicker reveal">Same patient, three methods</span>
+      <h1 class="reveal" style="--d:1">
+         {% if n_pos == 3 %}All three models say POSITIVE
+         {% elif n_pos == 0 %}All three models say NEGATIVE
+         {% else %}The models disagree: {{ n_pos }} of 3 say POSITIVE{% endif %}
+      </h1>
+      <p class="lede reveal" style="--d:2">
+         {% if n_pos in (0, 3) %}When every feature set leads to the same answer, the result is more trustworthy.
+         {% else %}Different feature sets point different ways for this patient. Treat the result with extra caution.{% endif %}
+      </p>
+   </div>
+</div>
+
+{% if actual is not none %}
+<div class="truth {{ 'ok' if n_right == 3 else ('miss' if n_right == 0 else 'mixed') }} reveal" style="--d:2; margin-bottom: 18px">
+   <b>{{ n_right }} of 3 correct</b>
+   <span>This is patient {{ row + 1 }} from heart.csv, who really <strong>{{ 'has' if actual else 'does not have' }} heart disease</strong>.</span>
+</div>
+{% endif %}
+
+<div class="grid-3">
+   {% for key, m, positive, risk in results %}
+   {% set best = m.results | selectattr('name', 'equalto', m.saved) | first %}
+   {% set unused = FIELDS.keys() | reject('in', m.fields) | list %}
+   <div class="card compare-card {{ 'tone-pos' if positive else 'tone-neg' }} reveal" style="--d:{{ loop.index + 2 }}">
+      <div class="compare-top">
+         <span class="badge">{{ m.name }}</span>
+         {% if actual is not none %}<span class="mark {{ 'ok' if positive == actual else 'miss' }}">{{ '✓ Correct' if positive == actual else '✗ Wrong' }}</span>{% endif %}
+      </div>
+      {{ ring(risk, positive, small=true) }}
+      <span class="verdict">{{ 'POSITIVE' if positive else 'NEGATIVE' }}</span>
+      <dl class="facts">
+         <div><dt>Classifier</dt><dd>{{ m.saved }}</dd></div>
+         <div><dt>Accuracy (CV)</dt><dd>{{ (best.cv_mean * 100) | round(1) }}%</dd></div>
+         <div><dt>Accuracy (test)</dt><dd>{{ (best.accuracy * 100) | round(1) }}%</dd></div>
+         <div><dt>Features used</dt><dd>{{ m.fields | length }} of 13</dd></div>
+      </dl>
+      {% if unused %}<p class="muted small-note">Ignores: {% for f in unused %}{{ FIELDS[f][0] }}{{ ', ' if not loop.last }}{% endfor %}</p>{% endif %}
+   </div>
+   {% endfor %}
+</div>
+
+<div class="card reveal" style="--d:6; margin-top: 18px">
+   <h3>Patient values</h3>
+   <div class="chips">
+      {% for f, v in inputs %}<span>{{ FIELDS[f][0] }} <b>{{ value_text(f, v) }}</b></span>{% endfor %}
+   </div>
+   <div class="note">These are models trained on a 303-patient study dataset, not a diagnosis. A doctor should confirm any result.
+      One patient shows how the methods can differ; their overall accuracy (above, and on the Insights page) is the fair comparison.</div>
+   <div class="form-foot">
+      <a class="btn primary" href="{{ url_for('compare') }}">Compare another patient</a>
+      <a class="btn ghost" href="{{ url_for('insights', model='anova') }}">See full accuracy results</a>
+      <button type="button" class="btn ghost" data-print>Print / save as PDF</button>
+      <a class="link" href="{{ url_for('history') }}">See history</a>
+   </div>
+</div>
+<div class="reveal" style="--d:7; margin-top: 18px">{{ explanation(inputs) }}</div>
+{% endblock %}

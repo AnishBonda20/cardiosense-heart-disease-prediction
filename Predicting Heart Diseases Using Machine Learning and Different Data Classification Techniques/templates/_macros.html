@@ -1,0 +1,127 @@
+{# Reusable page pieces. Import with: {% from '_macros.html' import name with context %} #}
+
+{# Model switcher used on the predict and insights pages. #}
+{% macro model_tabs(endpoint, current) %}
+<nav class="tabs" aria-label="Model">
+   {% for key, m in MODELS.items() %}
+   <a href="{{ url_for(endpoint, model=key) }}" class="{{ 'on' if key == current }}" {% if key == current %}aria-current="page"{% endif %}>{{ m.name }}</a>
+   {% endfor %}
+</nav>
+{% endmacro %}
+
+{# The patient form fields, grouped into sections. `fields` = which inputs to show.
+   Yes/no choices are a two-button toggle; longer lists are a dropdown (a native <select> that
+   static/js/app.js upgrades to a styled list with explanations); numbers show unit, typical value
+   and the range found in the dataset. Every label has an (i) button explaining the measurement.
+   `values` pre-fills the form (code → value), e.g. when a patient is carried over to Compare. #}
+{% macro info(f) %}<button type="button" class="info" data-info="{{ INFO[f] }}" aria-label="About {{ FIELDS[f][0] }}: {{ INFO[f] }}">i</button>{% endmacro %}
+{% macro patient_fields(fields, values={}) %}
+{% set groups = [
+   ('About the patient', ['age', 'sex']),
+   ('Symptoms and vitals', ['cp', 'trestbps', 'chol', 'exang']),
+   ('ECG and test results', ['restecg', 'thalach', 'oldpeak', 'slope', 'ca', 'thal']),
+] %}
+{% for title, names in groups %}
+{% set shown = names | select('in', fields) | list %}
+{% if shown %}
+<h3 class="group-title">{{ title }}</h3>
+<div class="fields">
+   {% for f in shown %}
+   {% set label, unit, rule = FIELDS[f] %}
+   {% if rule is not sequence or rule[0] is not sequence %}
+   {# number #}
+   {% set lo, typical, hi = RANGES[f] %}
+   <div class="field">
+      <div class="label-row"><label for="{{ f }}">{{ label }}</label>{{ info(f) }}</div>
+      <div class="num">
+         <input id="{{ f }}" type="number" name="{{ f }}" min="{{ rule[0] }}" max="{{ rule[1] }}" step="{{ rule[2] }}"
+                inputmode="decimal" placeholder="e.g. {{ typical }}" required aria-describedby="{{ f }}-hint"
+                {% if f in values %}value="{{ value_text(f, values[f]) }}"{% endif %}>
+         {% if unit %}<span class="unit">{{ unit }}</span>{% endif %}
+      </div>
+      <span class="hint" id="{{ f }}-hint">Dataset range {{ lo }}–{{ hi }}</span>
+      <span class="error">Enter a value between {{ rule[0] }} and {{ rule[1] }}.</span>
+   </div>
+   {% elif rule | length == 2 %}
+   {# yes/no style toggle #}
+   <fieldset class="field">
+      <legend class="label-row"><span>{{ label }}</span>{{ info(f) }}</legend>
+      <div class="toggle">
+         {% for code, name, _ in rule %}
+         <label><input type="radio" name="{{ f }}" value="{{ code }}" {% if loop.first %}required{% endif %}
+                       {% if f in values and values[f] | int == code %}checked{% endif %}><span>{{ name }}</span></label>
+         {% endfor %}
+      </div>
+      <span class="error">Pick one.</span>
+   </fieldset>
+   {% else %}
+   {# dropdown #}
+   <div class="field">
+      <div class="label-row"><label for="{{ f }}">{{ label }}</label>{{ info(f) }}</div>
+      <div class="dd" data-dd>
+         <select id="{{ f }}" name="{{ f }}" required>
+            <option value="" disabled {% if f not in values %}selected{% endif %}>Choose…</option>
+            {% for code, name, desc in rule %}<option value="{{ code }}" data-desc="{{ desc }}" {% if f in values and values[f] | int == code %}selected{% endif %}>{{ name }}</option>{% endfor %}
+         </select>
+      </div>
+      <span class="error">Choose an option.</span>
+   </div>
+   {% endif %}
+   {% endfor %}
+</div>
+{% endif %}
+{% endfor %}
+{% endmacro %}
+
+{# "Random patient from dataset" button plus the line that says which patient it picked. Needs static/js/app.js. #}
+{% macro random_button(fields, rows, row=none) %}
+<button type="button" class="btn ghost" data-random data-note="picked" data-fields='{{ fields | tojson }}' data-rows='{{ rows | tojson }}'>Random patient from dataset</button>
+{# Which heart.csv row was picked, so the result can show the real diagnosis and Compare can reuse the same patient. #}
+<input type="hidden" name="row" value="{{ row if row is not none else '' }}">
+{% endmacro %}
+
+{# Risk ring. 502.65 is the circle's length (2π × 80); the arc is drawn to the risk share of it. #}
+{% macro ring(risk, positive, small=false) %}
+{% set pct = (risk * 100) | round | int %}
+<div class="ring {{ 'sm' if small }} {{ 'tone-pos' if positive else 'tone-neg' }}" style="--arc: {{ (pct / 100 * 502.65) | round(1) }}">
+   <svg viewBox="0 0 200 200" aria-hidden="true">
+      <circle class="track" cx="100" cy="100" r="80"/>
+      <circle class="value" cx="100" cy="100" r="80"/>
+   </svg>
+   <div class="label"><b>{{ risk_text(risk) }}</b><span>estimated risk</span></div>
+</div>
+{% endmacro %}
+
+{# Show a stored input value the way a person reads it: "Male" instead of 1. #}
+{% macro value_text(f, v) -%}
+{{ CHOICE_NAMES[f][v | int] if f in CHOICE_NAMES else (v | int if v == v | int else v) }}
+{%- endmacro %}
+
+{# A risk as people read it. Some classifiers (Naive Bayes, KNN) give very confident scores, and
+   "0%" or "100%" would overstate the certainty of a model trained on 241 patients. #}
+{% macro risk_text(risk) -%}
+{% set pct = (risk * 100) | round | int %}{{ '<1%' if pct < 1 else ('>99%' if pct > 99 else pct ~ '%') }}
+{%- endmacro %}
+
+{# "What stands out for this patient": each value next to what the dataset shows for it.
+   It describes the 303 patients, not the model's reasoning, and says so. #}
+{% macro explanation(inputs) %}
+<div class="card explain">
+   <h3>What stands out for this patient</h3>
+   <p class="muted" style="margin-top: 4px">Each value compared with the {{ META.rows_raw }} patients in the dataset. This shows which values are common among people with heart disease, not how the model weighed them.</p>
+   <div class="legend">
+      <span><i class="dir up" aria-hidden="true">▲</i>Points toward heart disease</span>
+      <span><i class="dir down" aria-hidden="true">▼</i>Points away from it</span>
+      <span><i class="dir even" aria-hidden="true">–</i>No clear signal</span>
+   </div>
+   <ul class="explain-list">
+      {% set words = {'up': ('▲', 'points toward heart disease'), 'down': ('▼', 'points away from heart disease'), 'even': ('–', 'no clear signal')} %}
+      {% for f, v, direction, note in explain(inputs) %}
+      <li>
+         <i class="dir {{ direction }}" aria-label="{{ words[direction][1] }}">{{ words[direction][0] }}</i>
+         <span><b>{{ FIELDS[f][0] }}: {{ value_text(f, v) }}</b><small>{{ note }}</small></span>
+      </li>
+      {% endfor %}
+   </ul>
+</div>
+{% endmacro %}

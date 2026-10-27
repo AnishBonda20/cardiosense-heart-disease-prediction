@@ -1,0 +1,6 @@
+# Everything the app needs, plus what train.py uses to retrain the models.
+#   pip install -r requirements-train.txt
+#   python train.py
+-r requirements.txt
+imbalanced-learn==0.14.2
+xgboost==3.4.1

@@ -1,0 +1,20 @@
+{% extends 'auth.html' %}
+{% block title %}Log in{% endblock %}
+{% block form %}
+<div>
+   <h1>Welcome back</h1>
+   <p class="muted" style="margin-top: 6px">Log in to run predictions and explore the models.</p>
+</div>
+<form action="{{ url_for('signin') }}" method="POST" style="display: grid; gap: 16px">
+   <div class="field">
+      <label for="user">Username</label>
+      <input id="user" type="text" name="user" autocomplete="username" required autofocus>
+   </div>
+   <div class="field">
+      <label for="password">Password</label>
+      <input id="password" type="password" name="password" autocomplete="current-password" required>
+   </div>
+   <button type="submit" class="btn primary">Log in</button>
+</form>
+<p class="muted">New here? <a class="link" href="{{ url_for('logon') }}">Create an account</a></p>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import patient_fields, random_button with context %}
+{% block title %}Compare models{% endblock %}
+{% block content %}
+<div class="page-head">
+   <div>
+      <span class="kicker reveal">Side by side</span>
+      <h1 class="reveal" style="--d:1">Compare all three models</h1>
+      <p class="lede reveal" style="--d:2">Enter one patient. Each model reads only the features its method selected, so the same patient can get different answers.</p>
+   </div>
+</div>
+
+<div class="layout">
+   <form class="card reveal" style="--d:2" action="{{ url_for('compare') }}" method="POST">
+      {{ patient_fields(fields, values) }}
+      <div class="form-foot">
+         <button type="submit" class="btn primary">Compare</button>
+         {{ random_button(fields, rows) }}
+         <button type="reset" class="link plain">Clear</button>
+      </div>
+      <p class="muted" id="picked" role="status" style="margin-top: 12px" hidden></p>
+   </form>
+
+   <aside class="side">
+      <div class="card reveal" style="--d:3">
+         <h3 style="margin-bottom: 12px">Which model reads what</h3>
+         <table class="matrix">
+            <thead><tr><th></th>{% for key, m in MODELS.items() %}<th>{{ m.name }}</th>{% endfor %}</tr></thead>
+            <tbody>
+               {% for f in fields %}
+               <tr><td>{{ FIELDS[f][0] }}</td>
+                  {% for key, m in MODELS.items() %}<td>{% if f in m.fields %}<span class="tick" aria-label="used">●</span>{% else %}<span class="muted" aria-label="not used">–</span>{% endif %}</td>{% endfor %}
+               </tr>
+               {% endfor %}
+            </tbody>
+         </table>
+      </div>
+   </aside>
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Notebooks{% endblock %}
+{% block content %}
+<div class="page-head">
+   <div>
+      <span class="kicker reveal">Behind the models</span>
+      <h1 class="reveal" style="--d:1">Training notebooks</h1>
+      <p class="lede reveal" style="--d:2">The original Jupyter notebooks: data exploration, feature selection and the first round of classifiers. The models in this app were retrained with <code>train.py</code>, which splits off the test set before resampling.</p>
+   </div>
+</div>
+<div class="grid-3">
+   {% for key, m in MODELS.items() %}
+   <div class="card method reveal" style="--d:{{ loop.index + 2 }}">
+      <span class="badge">{{ m.name }}</span>
+      <h3>{{ m.long }} notebook</h3>
+      <p>{{ m.blurb }}</p>
+      <a class="btn ghost small" href="{{ url_for('notebook', model=key) }}" target="_blank" rel="noopener">Open notebook ↗</a>
+   </div>
+   {% endfor %}
+</div>
+{% endblock %}

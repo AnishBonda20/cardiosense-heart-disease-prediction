@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block title %}Overview{% endblock %}
+{% block content %}
+<section class="hero">
+   <div>
+      <span class="kicker reveal">Machine learning study</span>
+      <h1 class="reveal" style="--d:1">Predicting <em>heart disease</em> with different data classification techniques</h1>
+      <p class="lede reveal" style="--d:2">Heart disease is a leading cause of death worldwide. This project tests which patient features predict it best, using three feature-selection methods and ten classifiers on {{ META.rows }} patient records.</p>
+      <div class="actions reveal" style="--d:3">
+         {% if session.user %}
+         <a class="btn primary" href="{{ url_for('predict', model='anova') }}">Start a prediction</a>
+         <a class="btn ghost" href="{{ url_for('insights', model='anova') }}">See model insights</a>
+         {% else %}
+         <a class="btn primary" href="{{ url_for('logon') }}">Create an account</a>
+         <a class="btn ghost" href="{{ url_for('login') }}">Log in</a>
+         {% endif %}
+      </div>
+   </div>
+   <div class="hero-art reveal" style="--d:2">
+      <img class="float" src="{{ url_for('static', filename='images/UDMI_Cardiovascular-Disease.png') }}" alt="Diagram of cardiovascular diseases: coronary artery disease, valve disease, heart failure and aneurysm">
+   </div>
+</section>
+
+<svg class="ecg section" viewBox="0 0 1200 60" preserveAspectRatio="none" aria-hidden="true">
+   <path class="faint" d="M0 30H1200"/>
+   <path d="M0 30H220l12-6 10 6h18l8 12 14-40 14 36 8-8h20l14-8 12 8H560l12-6 10 6h18l8 12 14-40 14 36 8-8h20l14-8 12 8H900l12-6 10 6h18l8 12 14-40 14 36 8-8h20l14-8 12 8H1200"/>
+</svg>
+
+<section class="grid-3" style="margin-top: 28px">
+   <div class="card stat reveal" style="--d:3"><b>303</b><span>patient records in the dataset</span></div>
+   <div class="card stat reveal" style="--d:4"><b>3</b><span>feature-selection methods compared</span></div>
+   <div class="card stat reveal" style="--d:5"><b>10</b><span>classifiers tested on each feature set</span></div>
+</section>
+
+<section class="section">
+   <span class="kicker">The pipeline</span>
+   <h2 style="margin-top: 10px">From raw records to a saved model</h2>
+   {# Five line icons drawn in by CSS: table, scissors-split, scales, sliders, layers. #}
+   {% set steps = [
+      ('Clean', 'Load ' ~ META.rows_raw ~ ' records and drop duplicates, leaving ' ~ META.rows ~ ' patients.',
+       '<rect x="4" y="5" width="22" height="20" rx="3"/><path d="M4 11h22M4 17h22M12 5v20"/>'),
+      ('Split', 'Hold back ' ~ META.test ~ ' patients for testing before anything else touches the data.',
+       '<path d="M4 15h9M17 15h9M15 5v20"/><circle cx="8" cy="9" r="3"/><circle cx="22" cy="21" r="3"/>'),
+      ('Balance', 'SMOTEENN adds synthetic patients, then removes noisy ones, on the ' ~ META.train ~ ' training patients only.',
+       '<path d="M15 4v22M8 26h14M5 9h20M5 9l-3 8h6zM25 9l-3 8h6z"/>'),
+      ('Select', 'ANOVA, Chi² and MI each keep the features they score highest.',
+       '<path d="M5 8h20M5 15h20M5 22h20"/><circle cx="11" cy="8" r="2.5"/><circle cx="19" cy="15" r="2.5"/><circle cx="9" cy="22" r="2.5"/>'),
+      ('Train & pick', '11 classifiers (including voting and stacking ensembles) compared by 5-fold cross-validation; the best is saved.',
+       '<path d="M15 4l11 6-11 6-11-6zM4 15l11 6 11-6M4 20l11 6 11-6"/>'),
+   ] %}
+   <ol class="steps">
+      {% for title, text, icon in steps %}
+      <li class="reveal" style="--d:{{ loop.index + 2 }}">
+         <svg class="icon" viewBox="0 0 30 30" aria-hidden="true">{{ icon | safe }}</svg>
+         <span class="num">STEP {{ loop.index }}</span>
+         <b>{{ title }}</b><span>{{ text }}</span>
+      </li>
+      {% endfor %}
+   </ol>
+</section>
+
+<section class="section">
+   <span class="kicker">How it works</span>
+   <h2 style="margin-top: 10px">Three ways to choose what matters</h2>
+   <p class="lede">Each method picks a different subset of the 13 clinical features. Eleven classifiers are trained on each subset and the most accurate one is kept, so you can compare how they predict the same patient.</p>
+   <div class="grid-3" style="margin-top: 28px">
+      {% for key, m in MODELS.items() %}
+      <div class="card method reveal" style="--d:{{ loop.index + 2 }}">
+         <span class="badge">{{ m.name }}</span>
+         <h3>{{ m.long }}</h3>
+         <p>{{ m.blurb }} Uses {{ m.fields|length }} features; best classifier: <b>{{ m.saved }}</b>.</p>
+         {% if session.user %}
+         <span style="display: flex; gap: 16px; flex-wrap: wrap">
+            <a class="link" href="{{ url_for('predict', model=key) }}">Try it →</a>
+            <a class="link" href="{{ url_for('insights', model=key) }}">Results →</a>
+         </span>
+         {% endif %}
+      </div>
+      {% endfor %}
+   </div>
+</section>
+{% endblock %}

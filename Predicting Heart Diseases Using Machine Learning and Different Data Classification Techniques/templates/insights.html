@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import model_tabs with context %}
+{% block title %}Insights · {{ m.name }}{% endblock %}
+{# Every chart here is drawn from models/metrics.json, written by train.py. #}
+{% macro pct(x, d=1) %}{{ (x * 100) | round(d) }}%{% endmacro %}
+{% block content %}
+{% set saved = m.results | selectattr('name', 'equalto', m.saved) | first %}
+{% set ranked = m.results | sort(attribute='cv_mean', reverse=true) %}
+{% set rival = m.results | rejectattr('name', 'equalto', m.saved) | sort(attribute='auc', reverse=true) | first %}
+<div class="page-head">
+   <div>
+      <span class="kicker reveal">{{ m.long }}</span>
+      <h1 class="reveal" style="--d:1">How the {{ m.name }} model performed</h1>
+      <p class="lede reveal" style="--d:2">5-fold cross-validation on {{ META.train }} training patients, plus a final check on {{ META.test }} patients the model never saw. With so few test patients, one split can swing by several points, so cross-validation is the steadier number.</p>
+   </div>
+   <div class="reveal" style="--d:2">{{ model_tabs('insights', key) }}</div>
+</div>
+
+<section class="grid-4">
+   <div class="card stat reveal" style="--d:2"><b>{{ pct(saved.cv_mean) }}</b><span>cross-validated accuracy (± {{ pct(saved.cv_std, 0) }})</span></div>
+   <div class="card stat reveal" style="--d:3"><b>{{ pct(saved.accuracy) }}</b><span>accuracy on the {{ META.test }} test patients</span></div>
+   <div class="card stat reveal" style="--d:4"><b>{{ '%.2f' % saved.auc }}</b><span>ROC AUC (1.0 is perfect)</span></div>
+   <div class="card stat reveal" style="--d:5"><b>{{ pct(saved.recall) }}</b><span>of disease cases caught (recall)</span></div>
+</section>
+
+{# ── 1. why these features ── #}
+<section class="section">
+   <span class="kicker">Feature selection</span>
+   <h2 style="margin-top: 10px">Why these {{ m.fields | length }} features</h2>
+   <p class="lede">{{ m.long }} gives every feature a score. The top {{ m.k }} were kept; the rest were dropped before training.</p>
+   <div class="legend">
+      <span><i class="key pos"></i>Selected</span>
+      <span><i class="key muted-key"></i>Not selected</span>
+   </div>
+   <div class="card">
+      {% set top = m.scores.values() | max %}
+      {% for f, s in m.scores.items() | sort(attribute='1', reverse=true) %}
+      <div class="bar-row">
+         <span class="bar-label">{{ GLOSSARY[f][0] }}</span>
+         <div class="hbar"><i class="{{ 'pos' if f in m.fields else 'off' }}" style="width: {{ (s / top * 100) | round(1) if top else 0 }}%" data-tip="{{ GLOSSARY[f][0] }}: score {{ '%.3f' % s }}{{ ' · selected' if f in m.fields else ' · dropped' }}"></i><span>{{ '%.2f' % s }}</span></div>
+      </div>
+      {% endfor %}
+   </div>
+</section>
+
+{# ── 2. leaderboard ── #}
+<section class="section">
+   <span class="kicker">Leaderboard</span>
+   <h2 style="margin-top: 10px">All 11 classifiers</h2>
+   <p class="lede">Ordered by cross-validation accuracy, the steadier of the two scores: it averages five different splits instead of one. The top classifier is the one saved for this app. It's picked using training data only, so the test score stays a fair final check.</p>
+   <div class="card table-card" style="margin-top: 24px">
+      <table class="table scores">
+         <thead><tr><th>Classifier</th><th>CV accuracy</th><th class="r">Test acc.</th><th class="r">Precision</th><th class="r">Recall</th><th class="r">F1</th><th class="r">AUC</th></tr></thead>
+         <tbody>
+            {% for r in ranked %}
+            <tr class="{{ 'saved' if r.name == m.saved }}">
+               <td><b>{{ r.name }}</b>{% if r.name == m.saved %}<br><small class="muted">saved for this app</small>{% endif %}</td>
+               <td><div class="hbar score"><i style="width: {{ (r.cv_mean * 100) | round(1) }}%" data-tip="{{ r.name }}: {{ pct(r.cv_mean) }} ± {{ pct(r.cv_std) }} across 5 folds"></i><span>{{ pct(r.cv_mean) }} <small class="muted">± {{ pct(r.cv_std, 0) }}</small></span></div></td>
+               <td class="r">{{ pct(r.accuracy) }}</td><td class="r">{{ '%.3f' % r.precision }}</td><td class="r">{{ '%.3f' % r.recall }}</td><td class="r">{{ '%.3f' % r.f1 }}</td><td class="r">{{ '%.3f' % r.auc }}</td>
+            </tr>
+            {% endfor %}
+         </tbody>
+      </table>
+   </div>
+</section>
+
+{# ── how the three methods compare, and the stacking experiment ── #}
+<section class="section">
+   <span class="kicker">Across methods</span>
+   <h2 style="margin-top: 10px">The three methods are effectively tied</h2>
+   <p class="lede">The best models are {{ (SPREAD.gap * 100) | round(1) }} percentage points apart in cross-validated accuracy. One model's score moves by about ±{{ (SPREAD.fold_spread * 100) | round(1) }} points from one fold to the next, so the gap is within normal variation: no method is clearly better.</p>
+   <div class="card table-card" style="margin-top: 24px">
+      <table class="table methods">
+         <thead><tr><th>Model</th>{% for k, mm in MODELS.items() %}<th class="r">{{ mm.name }}</th>{% endfor %}</tr></thead>
+         <tbody>
+            <tr class="saved"><td><b>Saved model</b><br><small class="muted">best of the 11 classifiers</small></td>
+               {% for k, mm in MODELS.items() %}{% set b = mm.results | selectattr('name', 'equalto', mm.saved) | first %}<td class="r"><b>{{ pct(b.cv_mean) }}</b><br><small class="muted">{{ mm.saved }}</small></td>{% endfor %}</tr>
+            {% for row in STACKING_EXPERIMENT %}
+            <tr><td>Stacking: {{ row.name }}<br><small class="muted">extra ensemble tried</small></td>
+               {% for k in MODELS %}<td class="r">{{ pct(row[k]) }}</td>{% endfor %}</tr>
+            {% endfor %}
+         </tbody>
+      </table>
+   </div>
+   {% if STACKING_EXPERIMENT %}
+   <div class="note"><span><b>Stacking experiment.</b> To see if a stronger ensemble could lift any method, {{ STACKING_EXPERIMENT | length }} extra stacking ensembles (different base models combined by logistic regression) were cross-validated the same way on all three methods. None beat the saved models, so they weren't kept. Reproduce with <code>python experiment_stacking.py</code>.</span></div>
+   {% endif %}
+</section>
+
+<section class="section split-2">
+   {# ── 3. ROC curve ── #}
+   <div class="card">
+      <h3>ROC curve</h3>
+      <p class="muted" style="margin-top: 4px">How well the model ranks sick above healthy patients at every threshold. Closer to the top-left is better.</p>
+      <div class="legend">
+         <span><i class="key pos"></i>{{ m.saved }} · AUC {{ '%.2f' % saved.auc }}</span>
+         <span><i class="key ink-key"></i>{{ rival.name }} · AUC {{ '%.2f' % rival.auc }}</span>
+      </div>
+      {% macro roc_path(points) %}M{% for x, y in points %}{{ (40 + x * 240) | round(1) }},{{ (250 - y * 240) | round(1) }}{{ ' L' if not loop.last }}{% endfor %}{% endmacro %}
+      <svg class="roc" viewBox="0 0 300 290" role="img" aria-label="ROC curve: {{ m.saved }} AUC {{ '%.2f' % saved.auc }}, {{ rival.name }} AUC {{ '%.2f' % rival.auc }}">
+         {% for t in [0, 0.25, 0.5, 0.75, 1] %}
+         <line class="grid" x1="40" x2="280" y1="{{ 250 - t * 240 }}" y2="{{ 250 - t * 240 }}"/>
+         <text class="tick-label" x="32" y="{{ 254 - t * 240 }}" text-anchor="end">{{ t }}</text>
+         <text class="tick-label" x="{{ 40 + t * 240 }}" y="268" text-anchor="middle">{{ t }}</text>
+         {% endfor %}
+         <line class="chance" x1="40" y1="250" x2="280" y2="10"/>
+         <path class="line ink" d="{{ roc_path(m.roc[rival.name]) }}"/>
+         <path class="line pos" d="{{ roc_path(m.roc[m.saved]) }}"/>
+         {% for x, y in m.roc[m.saved] %}
+         <circle class="pt" cx="{{ (40 + x * 240) | round(1) }}" cy="{{ (250 - y * 240) | round(1) }}" r="6" data-tip="{{ m.saved }}: {{ pct(y, 0) }} of sick patients caught, {{ pct(x, 0) }} of healthy ones flagged"/>
+         {% endfor %}
+         <text class="axis-label" x="160" y="286" text-anchor="middle">False positive rate</text>
+         <text class="axis-label" x="-130" y="10" text-anchor="middle" transform="rotate(-90)">True positive rate</text>
+      </svg>
+   </div>
+
+   {# ── 4. confusion matrix ── #}
+   <div class="card">
+      {% set c = m.confusion %}
+      {% set cmax = [c[0][0], c[0][1], c[1][0], c[1][1]] | max %}
+      <h3>Confusion matrix</h3>
+      <p class="muted" style="margin-top: 4px">The {{ META.test }} test patients, by what they really had and what the {{ m.saved }} model said.</p>
+      <div class="cm">
+         <span></span><span class="cm-h">Predicted: no disease</span><span class="cm-h">Predicted: disease</span>
+         {% for actual, row in [('Actually healthy', c[0]), ('Actually sick', c[1])] %}
+         <span class="cm-h side">{{ actual }}</span>
+         {% for n in row %}
+         {% set correct = (actual == 'Actually healthy') == (loop.index0 == 0) %}
+         <div class="cm-cell" style="--a: {{ (0.12 + 0.6 * n / cmax) | round(2) }}" data-tip="{{ n }} patients: {{ actual | lower }}, predicted {{ 'no disease' if loop.index0 == 0 else 'disease' }}">
+            <b>{{ n }}</b><small>{{ 'correct' if correct else ('missed case' if actual == 'Actually sick' else 'false alarm') }}</small>
+         </div>
+         {% endfor %}
+         {% endfor %}
+      </div>
+   </div>
+</section>
+
+{# ── 5. SMOTEENN comparison ── #}
+<section class="section">
+   <span class="kicker">Resampling</span>
+   <h2 style="margin-top: 10px">Does SMOTEENN help?</h2>
+   <p class="lede">The same {{ m.saved }} model, cross-validated three ways. SMOTE adds synthetic patients; ENN then removes ones that sit among the other class.</p>
+   <div class="card" style="margin-top: 24px">
+      {% for a in m.resampling %}
+      <div class="bar-row">
+         <span class="bar-label">{{ a.name }}<small class="muted">{{ a.rows }} training rows</small></span>
+         <div class="hbar"><i class="{{ 'pos' if 'used' in a.name else 'off' }}" style="width: {{ (a.cv_mean * 100) | round(1) }}%" data-tip="{{ a.name }}: {{ pct(a.cv_mean) }} ± {{ pct(a.cv_std) }}"></i><span>{{ pct(a.cv_mean) }} <small class="muted">± {{ pct(a.cv_std, 0) }}</small></span></div>
+      </div>
+      {% endfor %}
+      <div class="note"><span>The default SMOTEENN removed most of the training set because raw cholesterol values dominated its distance checks. The tuned version scales features first and keeps categories as real codes. Differences within about ±{{ pct(saved.cv_std, 0) }} are within normal variation for a dataset this size.</span></div>
+   </div>
+</section>
+
+<p class="muted section" style="margin-top: 40px">Want the original exploration? <a class="link" href="{{ url_for('notebooks') }}">Open the training notebooks →</a></p>
+{% endblock %}

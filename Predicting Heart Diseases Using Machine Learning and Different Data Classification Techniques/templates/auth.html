@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{# Shared layout for log in, register and OTP: illustration on the left, form on the right. #}
+{% block content %}
+<div class="card auth reveal">
+   <div class="auth-art">
+      <div>
+         <span class="kicker">CardioSense</span>
+         <h2 style="margin-top: 10px">{% block art_title %}Know your heart, one feature at a time.{% endblock %}</h2>
+      </div>
+      <img class="float" src="{{ url_for('static', filename='images/form-img.png') }}" alt="" width="520" height="500">
+   </div>
+   <div class="auth-form">
+      {% block form %}{% endblock %}
+   </div>
+</div>
+{% endblock %}
